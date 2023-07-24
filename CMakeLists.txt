@@ -8,7 +8,7 @@ project(
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(CMAKE_CXX_COMPILER clang)
+set(CMAKE_CXX_COMPILER clang++)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_BUILD_TYPE "RelWithDebInfo")
@@ -98,4 +98,7 @@ foreach(flag
     add_link_options(${flag})
 endforeach()
 
-add_subdirectory(src)
+find_package(glog REQUIRED)
+find_package(gtest REQUIRED)
+
+add_executable(${CMAKE_PROJECT_NAME} main.cc)
