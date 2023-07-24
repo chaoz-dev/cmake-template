@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.22 FATAL_ERROR)
 project(
     cmake-template
-    VERSION 0.1.0
+    VERSION 0.2.0
     DESCRIPTION "Template for CMake projects."
     LANGUAGES CXX
 )
