@@ -1,4 +1,6 @@
-cmake_minimum_required(VERSION 3.22 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.25 FATAL_ERROR)
+set(CMAKE_CXX_COMPILER clang)
+
 project(
     cmake-template
     VERSION 0.2.0
@@ -6,19 +8,65 @@ project(
     LANGUAGES CXX
 )
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-set(CMAKE_CXX_COMPILER clang++)
+# cc configurations.
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_BUILD_TYPE "RelWithDebInfo")
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(COMPILE_LIBRARY_FLAGS
-    "-stdlib=libc++"
+# cc compiler flags.
+set(CC_LIBRARY_FLAGS "-stdlib=libc++")
+set(CC_OPTIMIZATION_FLAGS "-fno-omit-frame-pointer")
+# Suppress warnings when building external dependencies.
+set(CC_EXTERNAL_DIAGNOSTIC_FLAGS "-w")
+foreach(flag
+        ${CC_LIBRARY_FLAGS}
+        ${CC_OPTIMIZATION_FLAGS}
+        ${CC_EXTERNAL_DIAGNOSTIC_FLAGS})
+    add_compile_options(${flag})
+endforeach()
+
+# cc linker flags.
+set(LD_LINKER_FLAGS "-fuse-ld=lld")
+set(LD_LIBRARY_FLAGS
+    "-rtlib=compiler-rt"
+    "-lc++"
+    "-lc++abi"
+    "-lm"
+    "-lpthread"
 )
-set(COMPILE_OPTIMIZATION_FLAGS
-    "-fno-omit-frame-pointer"
+foreach(flag
+        ${LD_LINKER_FLAGS}
+        ${LD_LIBRARY_FLAGS})
+    add_link_options(${flag})
+endforeach()
+
+# Find dependencies.
+find_package(Threads)
+
+include(FetchContent)
+
+FetchContent_Declare(
+    gtest
+    GIT_REPOSITORY  https://github.com/google/googletest.git
+    GIT_TAG         v1.13.0
+    OVERRIDE_FIND_PACKAGE
 )
+
+FetchContent_Declare(
+    glog
+    GIT_REPOSITORY  https://github.com/google/glog.git
+    GIT_TAG         v0.6.0
+    OVERRIDE_FIND_PACKAGE
+)
+
+FetchContent_MakeAvailable(
+    glog
+    gtest
+)
+
+# cc compiler flags.
+# These are the diagnostic flags that the project uses.
 set(COMPILE_DIAGNOSTIC_FLAGS
     # General warnings and errors.
     "-Wall"
@@ -74,31 +122,6 @@ set(COMPILE_DIAGNOSTIC_FLAGS
     "-Wundefined-reinterpret-cast"
     "-Wvector-conversion"
 )
+add_compile_options(${COMPILE_DIAGNOSTIC_FLAGS})
 
-foreach(flag
-        ${COMPILE_LIBRARY_FLAGS}
-        ${COMPILE_OPTIMIZATION_FLAGS}
-        ${COMPILE_DIAGNOSTIC_FLAGS})
-    add_compile_options(${flag})
-endforeach()
-
-set(LINK_LINKER_FLAGS
-    "-fuse-ld=lld"
-)
-set(LINK_LIBRARY_FLAGS
-    "-rtlib=compiler-rt"
-    "-lc++"
-    "-lc++abi"
-    "-lm"
-    "-lpthread"
-)
-foreach(flag
-        ${LINK_LINKER_FLAGS}
-        ${LINK_LIBRARY_FLAGS})
-    add_link_options(${flag})
-endforeach()
-
-find_package(glog REQUIRED)
-find_package(gtest REQUIRED)
-
-add_executable(${CMAKE_PROJECT_NAME} main.cc)
+enable_testing()
